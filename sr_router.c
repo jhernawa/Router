@@ -227,8 +227,7 @@ void sr_handlepacket(struct sr_instance* sr,
     		{
       			fprintf(stderr, "ERROR: Checksum is invalid");
    		}
-   		/*printf("\n\n---CHECKING THE ORI PACKET----\n\n");
-   		print_hdrs(packet,len);*/
+		
 		if(ip_hdr->ip_p == ip_protocol_icmp)/*handle ICMP response (PING - Type:0)*/
 		{
 
@@ -273,16 +272,17 @@ void sr_handlepacket(struct sr_instance* sr,
       			fprintf(stderr, "ERROR: Checksum is invalid");
    		}
 
+		/*check ip version in ip*/
+		if(ip_hdr->ip_v != 4)
+		{
+			fprintf(stderr, "ERROR: IP VERSION IS NOT IP_V4");
+		}
+
 		/*Handle ICMP response (Time exceeded - Type: 11, Code: 0) */
 		if(ip_hdr->ip_ttl-1 == 0)
 		{
 			/*printf("---------------SEND TIME EXCEEDED~~~~~~~~~~~~~~~");*/
 			handle_ICMP_response( sr, packet, len, 11, 0, eth_hdr, ip_hdr, interface, NULL );
-		}
-		/*check ip version in ip*/
-		if(ip_hdr->ip_v != 4)
-		{
-			fprintf(stderr, "ERROR: IP VERSION IS NOT IP_V4");
 		}
 
 
