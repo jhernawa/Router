@@ -67,6 +67,21 @@ int sr_read_from_server(struct sr_instance* );
 /* -- sr_router.c -- */
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
+void handle_ICMP_response(struct sr_instance * r,uint8_t * packet, unsigned int len, int type, int code,
+			  sr_ethernet_hdr_t * eth_hdr, sr_ip_hdr_t * ip_hdr,
+			  char * interface, char * hitInterface)
+;
+void handle_ARP_process_reply(struct sr_instance* sr,
+        uint8_t * packet/* lent (full packet that contain the ethernet header as well)*/,
+        unsigned int len,
+        char* interface/* lent (name of the receiving interface of the router's)*/);
+
+void handle_ARP_send_reply(struct sr_instance * sr, unsigned int len, sr_ethernet_hdr_t * eth_hdr, 
+		      sr_arp_hdr_t * arp_hdr, char * interface);
+
+void handle_ARP_send_request( struct sr_instance * sr, struct sr_arpreq * arp_req);
+
+void handle_arpreq( struct sr_instance * sr, struct sr_arpreq * arp_req);
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );

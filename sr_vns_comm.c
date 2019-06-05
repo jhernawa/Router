@@ -562,7 +562,7 @@ sr_ether_addrs_match_interface( struct sr_instance* sr, /* borrowed */
 int sr_send_packet(struct sr_instance* sr /* borrowed */,
                          uint8_t* buf /* borrowed */ ,
                          unsigned int len,
-                         const char* iface /* borrowed */)
+                         const char* iface /* borrowed(outgoing interface) */)
 {
     c_packet_header *sr_pkt;
     unsigned int total_len =  len + (sizeof(c_packet_header));
@@ -603,6 +603,7 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
         return -1;
     }
 
+    /*printf("SENDING PACKET");*/
     free(sr_pkt);
 
     return 0;

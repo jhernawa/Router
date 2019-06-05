@@ -11,6 +11,7 @@
 #include "sr_if.h"
 #include "sr_protocol.h"
 
+
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.
@@ -18,6 +19,22 @@
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
     /* Fill this in */
+    
+    pthread_mutex_lock(&(sr->cache.lock));
+    /*resend every request in the ARP cache queue*/
+    struct sr_arpreq * req = sr->cache.requests;
+    while( req != NULL )
+    {
+	
+    	struct sr_arpreq * req_next = req->next; 
+	handle_arpreq(sr,req);
+
+	req = req_next;
+	
+	
+    }	
+
+    pthread_mutex_unlock(&(sr->cache.lock));
 }
 
 /* You should not need to touch the rest of this code. */
@@ -34,7 +51,7 @@ struct sr_arpentry *sr_arpcache_lookup(struct sr_arpcache *cache, uint32_t ip) {
         if ((cache->entries[i].valid) && (cache->entries[i].ip == ip)) {
             entry = &(cache->entries[i]);
         }
-    }
+   }
     
     /* Must return a copy b/c another thread could jump in and modify
        table after we return. */
