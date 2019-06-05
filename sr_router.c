@@ -227,8 +227,8 @@ void sr_handlepacket(struct sr_instance* sr,
     		{
       			fprintf(stderr, "ERROR: Checksum is invalid");
    		}
-   		printf("\n\n---CHECKING THE ORI PACKET----\n\n");
-   		print_hdrs(packet,len);
+   		/*printf("\n\n---CHECKING THE ORI PACKET----\n\n");
+   		print_hdrs(packet,len);*/
 		if(ip_hdr->ip_p == ip_protocol_icmp)/*handle ICMP response (PING - Type:0)*/
 		{
 
@@ -264,6 +264,15 @@ void sr_handlepacket(struct sr_instance* sr,
   		sr_ip_hdr_t * ip_hdr = (sr_ip_hdr_t *) (packet + sizeof(sr_ethernet_hdr_t));
 
 
+   		/*check checksum in ip*/
+    		uint16_t ip_sum_ori = ip_hdr->ip_sum;
+    		ip_hdr->ip_sum = 0;
+    		uint16_t ip_sum_recalculate = cksum(ip_hdr, sizeof(sr_ip_hdr_t) );
+    		if( ip_sum_ori != ip_sum_recalculate )
+    		{
+      			fprintf(stderr, "ERROR: Checksum is invalid");
+   		}
+
 		/*Handle ICMP response (Time exceeded - Type: 11, Code: 0) */
 		if(ip_hdr->ip_ttl-1 == 0)
 		{
@@ -276,17 +285,7 @@ void sr_handlepacket(struct sr_instance* sr,
 			fprintf(stderr, "ERROR: IP VERSION IS NOT IP_V4");
 		}
 
-   		/*check checksum in ip*/
-    		uint16_t ip_sum_ori = ip_hdr->ip_sum;
-    		ip_hdr->ip_sum = 0;
-    		uint16_t ip_sum_recalculate = cksum(ip_hdr, sizeof(sr_ip_hdr_t) );
-    		if( ip_sum_ori != ip_sum_recalculate )
-    		{
-      			fprintf(stderr, "ERROR: Checksum is invalid");
-   		}
 
-   		printf("\n\n---CHECKING THE ORI PACKET----\n\n");
-   		print_hdrs(packet,len);
 		if( ip_hdr->ip_p == ip_protocol_icmp || (ip_hdr->ip_p == 17 || ip_hdr->ip_p == 6) )/*forward ICMP packet (PING - Type:0)*/
 		{
 			if(ip_hdr->ip_p == ip_protocol_icmp)
@@ -616,10 +615,10 @@ void handle_ICMP_response(struct sr_instance * sr, uint8_t * packet, unsigned in
 			print_hdr_icmp( (uint8_t *) (rep_packet_icmp + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)) );*/
 
 
-      			printf("\n\n----CHECKING THE REPLY PACKET----\n\n");
+      			/*printf("\n\n----CHECKING THE REPLY PACKET----\n\n");
 			printf("\n\noioioi\n\n");
       			print_hdrs(rep_packet_icmp, sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t) + ICMP_DATA_SIZE);
-			printf("\n\nioioio\n\n");
+			printf("\n\nioioio\n\n");*/
 
 			/*send*/
         		sr_send_packet(sr, rep_packet_icmp, sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t) + ICMP_DATA_SIZE, interface);
