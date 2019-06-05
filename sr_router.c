@@ -97,6 +97,9 @@ void sr_handlepacket(struct sr_instance* sr,
   struct sr_rt * longestRoutingTable = NULL;
   if( ethertype(packet) == ethertype_arp ) /*arp packet is only handled by the router*/
   {
+	/*get the eth_hdr*/
+	uint8_t * ethHeader_tmp = packet;
+	sr_ethernet_hdr_t * eth_hdr_tmp = (sr_ethernet_hdr_t *) ethHeader_tmp;
         /*get the arp_hdr*/
  	uint8_t * arpHeader_tmp = packet + sizeof(struct sr_ethernet_hdr);
   	sr_arp_hdr_t * arp_hdr_tmp = (sr_arp_hdr_t *) arpHeader_tmp;
@@ -113,6 +116,21 @@ void sr_handlepacket(struct sr_instance* sr,
             }
             currIf = currIf->next;
         }
+	/*receive an ARP request not destined for the router AND you already have an entry in ARP cache for this IP address, you should update the entry with the new MAC address seen in this request AND reset the timeout for this entry*/
+	if( forRouter == 0 )
+	{
+		/*check for existing entry in the cache*/
+		struct sr_arpentry * mapping = sr_arpcache_lookup(&(sr->cache), arp_hdr_tmp->ar_sip);
+		
+		if(mapping != NULL)
+		{
+			sr_arpcache_insert(&(sr->cache), eth_hdr_tmp->ether_shost, arp_hdr_tmp->ar_sip);
+
+			/*free the mapping*/
+			free(mapping);
+		}
+
+	}
 
   }
   else if( ethertype(packet) == ethertype_ip) /*ip packet can be for router, servers, or client*/
@@ -195,6 +213,14 @@ void sr_handlepacket(struct sr_instance* sr,
   		if(ntohs(arp_hdr->ar_op) == arp_op_request)
   		{
 			/*printf("ALERT: THIS IS ARP REQUEST\n\n");*/
+			/*add en entry to the ARP cache with <IP Address, MAC address>*/
+			struct sr_arpreq * arp_req = sr_arpcache_insert(&(sr->cache), eth_hdr->ether_shost, arp_hdr->ar_sip);
+			if(arp_req != NULL)
+			{
+				printf("\n\n~~~~~ARP REQ DESTROYED~~~~~~~~\n\n");
+				sr_arpreq_destroy(&(sr->cache), arp_req);
+			}
+
 			handle_ARP_send_reply(sr, len, eth_hdr, arp_hdr,interface);
   		}
 		else if(ntohs(arp_hdr->ar_op) == arp_op_reply)
